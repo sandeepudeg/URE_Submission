@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URE System Process Flow Diagram</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+        .diagram-section {
+            margin-bottom: 40px;
+        }
+        .diagram-title {
+            color: #34495e;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .diagram-description {
+            color: #555;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        .mermaid {
+            text-align: center;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .legend {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .legend h4 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .legend-item {
+            display: inline-block;
+            margin: 5px 15px 5px 0;
+            font-size: 0.9em;
+        }
+        .legend-color {
+            display: inline-block;
+            width: 20px;
+            height: 15px;
+            margin-right: 8px;
+            border-radius: 3px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌾 Unified Rural Ecosystem (URE)</h1>
+        <p class="subtitle">Agricultural Market Intelligence System - Process Flow Diagrams</p>
+
+        <!-- Main System Architecture Flow -->
+        <div class="diagram-section">
+            <h2 class="diagram-title">1. System Architecture & Data Flow</h2>
+            <div class="diagram-description">
+                <strong>Overview:</strong> This diagram shows the complete end-to-end flow of the URE system, from user input through AI processing to response delivery. The system uses a supervisor-worker architecture with MCP integration for external service access.
+            </div>
+            <div class="mermaid">
+graph TB
+    subgraph Internet["🌐 Internet & External Services"]
+        Users[👨‍🌾 Rural Farmers<br/>Web • WhatsApp • Voice]
+        ExtAPIs[🌍 External APIs<br/>Agmarknet • Weather • data.gov.in]
+    end
+
+    subgraph AWSCloud["☁️ AWS Cloud Infrastructure"]
+        subgraph EdgeLayer["🚪 Edge & API Layer"]
+            CloudFront[📡 CloudFront<br/>CDN & Static Assets]
+            APIGateway[🚪 API Gateway<br/>REST APIs<br/>Rate Limiting & Auth]
+        end
+
+        subgraph ComputeLayer["⚡ Serverless Compute"]
+            LambdaHandler[🔄 Request Handler<br/>AWS Lambda<br/>Session Management]
+            SupervisorAgent[🧠 Supervisor Agent<br/>Claude 3.5 Sonnet<br/>Intent Analysis & Routing]
+        end
+
+        subgraph MCPLayer["🔌 MCP Integration Layer"]
+            MCPClient[🔌 MCP Client<br/>Tool Registry<br/>External Service Access]
+            MCPServers[🛠️ MCP Servers<br/>Agmarknet MCP<br/>Weather MCP<br/>Government API MCP]
+        end
+
+        subgraph SpecialistAgents["🤖 AI Specialist Agents"]
+            AgriAgent[🌾 Agri-Expert<br/>Disease ID & Treatment<br/>Market Prices]
+            PolicyAgent[📋 Policy Navigator<br/>Government Schemes<br/>Eligibility Matching]
+            ResourceAgent[💧 Resource Optimizer<br/>Irrigation Planning<br/>Weather Analysis]
+        end
+
+        subgraph AIServices["🎯 AWS AI/ML Services"]
+            Bedrock[🛡️ Amazon Bedrock<br/>Claude 3.5 Sonnet<br/>Guardrails & Safety]
+            BedrockKB[📚 Bedrock Knowledge Base<br/>RAG • Vector Search<br/>Government Schemes]
+            Transcribe[🎤 Amazon Transcribe<br/>Speech-to-Text<br/>Regional Languages]
+            Translate[🌐 Amazon Translate<br/>Multi-language Support]
+            Polly[🔊 Amazon Polly<br/>Text-to-Speech<br/>Voice Responses]
+        end
+
+        subgraph DataLayer["💾 Data Storage & Search"]
+            DynamoDB[(🗃️ DynamoDB<br/>Conversation History<br/>User Profiles)]
+            S3Images[🖼️ S3 Images<br/>PlantVillage Dataset<br/>User Uploads)]
+            S3Data[📊 S3 Data<br/>Sensor Logs<br/>Weather Data)]
+            OpenSearch[🔍 OpenSearch<br/>Image Embeddings<br/>Disease Metadata)]
+        end
+    end
+
+    %% User Flow (Numbered 1-9)
+    Users -->|1. Query| CloudFront
+    CloudFront -->|2. Route| APIGateway
+    APIGateway -->|3. Process| LambdaHandler
+    LambdaHandler -->|4. Analyze| SupervisorAgent
+
+    %% MCP Integration
+    SupervisorAgent <--> MCPClient
+    AgriAgent <--> MCPClient
+    PolicyAgent <--> MCPClient
+    ResourceAgent <--> MCPClient
+    MCPClient <--> MCPServers
+    MCPServers -->|External APIs| ExtAPIs
+
+    %% Agent Routing
+    SupervisorAgent -->|5a. Agricultural| AgriAgent
+    SupervisorAgent -->|5b. Policy| PolicyAgent
+    SupervisorAgent -->|5c. Resource| ResourceAgent
+
+    %% AI Service Integration
+    SupervisorAgent <--> Bedrock
+    AgriAgent <--> Bedrock
+    PolicyAgent <--> BedrockKB
+    ResourceAgent <--> Bedrock
+
+    %% Voice Processing
+    LambdaHandler <--> Transcribe
+    SupervisorAgent <--> Translate
+    SupervisorAgent <--> Polly
+
+    %% Data Access
+    LambdaHandler <--> DynamoDB
+    AgriAgent <--> S3Images
+    AgriAgent <--> OpenSearch
+    PolicyAgent <--> BedrockKB
+    ResourceAgent <--> S3Data
+
+    %% External Data (via MCP)
+    MCPServers -->|Price Data| ExtAPIs
+    MCPServers -->|Weather Data| ExtAPIs
+    MCPServers -->|Scheme Data| ExtAPIs
+
+    %% Response Flow
+    SupervisorAgent -->|6. Synthesize| LambdaHandler
+    LambdaHandler -->|7. Response| APIGateway
+    APIGateway -->|8. Deliver| CloudFront
+    CloudFront -->|9. Return| Users
+
+    %% Styling
+    classDef userStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef edgeStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef computeStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef mcpStyle fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px
+    classDef agentStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef aiStyle fill:#fff8e1,stroke:#fbc02d,stroke-width:2px
+    classDef dataStyle fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
+    classDef externalStyle fill:#f1f8e9,stroke:#689f38,stroke-width:2px
+
+    class Users userStyle
+    class CloudFront,APIGateway edgeStyle
+    class LambdaHandler,SupervisorAgent computeStyle
+    class MCPClient,MCPServers mcpStyle
+    class AgriAgent,PolicyAgent,ResourceAgent agentStyle
+    class Bedrock,BedrockKB,Transcribe,Translate,Polly aiStyle
+    class DynamoDB,S3Images,S3Data,OpenSearch dataStyle
+    class ExtAPIs externalStyle
+            </div>
+        </div>
+
+        <!-- Agent Decision Flow -->
+        <div class="diagram-section">
+            <h2 class="diagram-title">2. Agent Decision & Routing Flow</h2>
+            <div class="diagram-description">
+                <strong>Purpose:</strong> Shows how the Supervisor Agent analyzes user queries and routes them to appropriate specialist agents. The system can invoke single or multiple agents based on query complexity.
+            </div>
+            <div class="mermaid">
+flowchart TD
+    Start([👨‍🌾 User Query Received]) --> Parse[🔍 Parse & Analyze Query]
+    Parse --> Intent{🧠 Determine Intent}
+    
+    Intent -->|Agricultural Query| AgriPath[🌾 Route to Agri-Expert]
+    Intent -->|Policy Query| PolicyPath[📋 Route to Policy Navigator]
+    Intent -->|Resource Query| ResourcePath[💧 Route to Resource Optimizer]
+    Intent -->|Complex/Multi-domain| MultiPath[🔄 Route to Multiple Agents]
+    Intent -->|Unclear| Clarify[❓ Ask Clarifying Questions]
+    
+    AgriPath --> AgriAgent[🌾 Agri-Expert Agent<br/>• Disease Identification<br/>• Market Price Analysis<br/>• Treatment Recommendations]
+    PolicyPath --> PolicyAgent[📋 Policy Navigator Agent<br/>• Scheme Matching<br/>• Eligibility Assessment<br/>• Application Guidance]
+    ResourcePath --> ResourceAgent[💧 Resource Optimizer Agent<br/>• Irrigation Planning<br/>• Weather Analysis<br/>• Energy Optimization]
+    
+    MultiPath --> Parallel{🔀 Parallel Execution}
+    Parallel --> AgriAgent
+    Parallel --> PolicyAgent
+    Parallel --> ResourceAgent
+    
+    AgriAgent --> MCPAgri[🔌 MCP Tools<br/>• get_mandi_prices<br/>• get_price_trends<br/>• search_plantvillage]
+    PolicyAgent --> MCPPolicy[🔌 MCP Tools<br/>• search_schemes<br/>• check_eligibility<br/>• get_subsidy_info]
+    ResourceAgent --> MCPResource[🔌 MCP Tools<br/>• get_weather_forecast<br/>• get_soil_conditions<br/>• get_rainfall_data]
+    
+    MCPAgri --> AgriResponse[📊 Agricultural Response]
+    MCPPolicy --> PolicyResponse[📋 Policy Response]
+    MCPResource --> ResourceResponse[💧 Resource Response]
+    
+    AgriResponse --> Synthesize[🔄 Synthesize Responses]
+    PolicyResponse --> Synthesize
+    ResourceResponse --> Synthesize
+    Clarify --> Synthesize
+    
+    Synthesize --> Safety[🛡️ Apply Bedrock Guardrails]
+    Safety --> Translate[🌐 Translate to User Language]
+    Translate --> Deliver[📱 Deliver Response]
+    Deliver --> End([✅ Response Sent])
+    
+    %% Styling
+    classDef startEnd fill:#e8f5e8,stroke:#4caf50,stroke-width:3px
+    classDef process fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    classDef decision fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    classDef agent fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+    classDef mcp fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px
+    classDef response fill:#e0f2f1,stroke:#009688,stroke-width:2px
+    
+    class Start,End startEnd
+    class Parse,Synthesize,Safety,Translate,Deliver process
+    class Intent,Parallel decision
+    class AgriAgent,PolicyAgent,ResourceAgent agent
+    class MCPAgri,MCPPolicy,MCPResource mcp
+    class AgriResponse,PolicyResponse,ResourceResponse response
+            </div>
+        </div>
+
+        <!-- MCP Integration Flow -->
+        <div class="diagram-section">
+            <h2 class="diagram-title">3. MCP Integration & Tool Access Flow</h2>
+            <div class="diagram-description">
+                <strong>Purpose:</strong> Detailed view of how the Model Context Protocol (MCP) layer handles external service integration, tool registry management, and secure data access with retry logic and fallback mechanisms.
+            </div>
+            <div class="mermaid">
+sequenceDiagram
+    participant Agent as 🤖 AI Agent
+    participant MCPClient as 🔌 MCP Client
+    participant Registry as 📋 Tool Registry
+    participant MCPServer as 🛠️ MCP Server
+    participant ExtAPI as 🌍 External API
+    participant Cache as 💾 Cache
+    participant Logger as 📝 Logger
+    
+    Agent->>MCPClient: Request Tool (tool_id, parameters)
+    MCPClient->>Registry: Validate Tool & Permissions
+    
+    alt Tool Valid & Authorized
+        Registry-->>MCPClient: ✅ Tool Authorized
+        MCPClient->>Logger: Log Tool Request
+        MCPClient->>MCPServer: Execute Tool Call
+        
+        alt MCP Server Available
+            MCPServer->>ExtAPI: API Request
+            ExtAPI-->>MCPServer: API Response
+            MCPServer-->>MCPClient: Tool Response
+            MCPClient->>Cache: Update Cache
+            MCPClient->>Logger: Log Success
+            MCPClient-->>Agent: ✅ Tool Result
+        else MCP Server Timeout/Error
+            MCPClient->>MCPClient: Retry Logic (3x)
+            alt Retry Successful
+                MCPServer-->>MCPClient: Tool Response
+                MCPClient-->>Agent: ✅ Tool Result
+            else All Retries Failed
+                MCPClient->>Cache: Check Cache
+                alt Cache Available
+                    Cache-->>MCPClient: Cached Data
+                    MCPClient->>Logger: Log Cache Fallback
+                    MCPClient-->>Agent: ⚠️ Cached Result
+                else No Cache
+                    MCPClient->>Logger: Log Failure
+                    MCPClient-->>Agent: ❌ Tool Unavailable
+                end
+            end
+        end
+    else Tool Invalid/Unauthorized
+        Registry-->>MCPClient: ❌ Access Denied
+        MCPClient->>Logger: Log Security Incident
+        MCPClient-->>Agent: ❌ Permission Denied
+    end
+            </div>
+        </div>
+
+        <!-- User Interaction Flow -->
+        <div class="diagram-section">
+            <h2 class="diagram-title">4. Multi-Modal User Interaction Flow</h2>
+            <div class="diagram-description">
+                <strong>Purpose:</strong> Shows how the system handles different input modalities (text, voice, images) from various channels (web, WhatsApp, SMS) and provides appropriate responses in the user's preferred language.
+            </div>
+            <div class="mermaid">
+graph LR
+    subgraph UserInputs["👨‍🌾 User Inputs"]
+        WebText[💻 Web Interface<br/>Text Input]
+        WhatsApp[📱 WhatsApp<br/>Text/Image/Voice]
+        SMS[📟 SMS<br/>Text Only]
+        Voice[🎤 Voice Call<br/>Audio Input]
+    end
+    
+    subgraph InputProcessing["🔄 Input Processing"]
+        TextProcessor[📝 Text Processor<br/>Direct Processing]
+        VoiceProcessor[🎤 Amazon Transcribe<br/>Speech-to-Text]
+        ImageProcessor[🖼️ Image Processor<br/>S3 Upload & Analysis]
+        LanguageDetect[🌐 Language Detection<br/>Auto-detect or User Preference]
+    end
+    
+    subgraph CoreProcessing["🧠 Core AI Processing"]
+        SupervisorAgent[🧠 Supervisor Agent<br/>Intent Analysis & Routing]
+        SpecialistAgents[🤖 Specialist Agents<br/>Domain-specific Processing]
+        MCPTools[🔌 MCP Tools<br/>External Data Access]
+    end
+    
+    subgraph ResponseGeneration["📤 Response Generation"]
+        ResponseSynthesis[🔄 Response Synthesis<br/>Multi-agent Coordination]
+        SafetyFilter[🛡️ Bedrock Guardrails<br/>Content Safety]
+        Translation[🌐 Amazon Translate<br/>Multi-language Support]
+        VoiceGeneration[🔊 Amazon Polly<br/>Text-to-Speech]
+    end
+    
+    subgraph UserOutputs["📱 User Outputs"]
+        WebResponse[💻 Web Interface<br/>Rich Text & Graphics]
+        WhatsAppResponse[📱 WhatsApp<br/>Text/Image/Voice]
+        SMSResponse[📟 SMS<br/>160 char limit]
+        VoiceResponse[🎤 Voice Call<br/>Audio Response]
+    end
+    
+    %% Input Flow
+    WebText --> TextProcessor
+    WhatsApp --> TextProcessor
+    WhatsApp --> ImageProcessor
+    WhatsApp --> VoiceProcessor
+    SMS --> TextProcessor
+    Voice --> VoiceProcessor
+    
+    %% Processing Flow
+    TextProcessor --> LanguageDetect
+    VoiceProcessor --> LanguageDetect
+    ImageProcessor --> SupervisorAgent
+    LanguageDetect --> SupervisorAgent
+    
+    SupervisorAgent --> SpecialistAgents
+    SpecialistAgents --> MCPTools
+    MCPTools --> ResponseSynthesis
+    
+    %% Response Flow
+    ResponseSynthesis --> SafetyFilter
+    SafetyFilter --> Translation
+    Translation --> VoiceGeneration
+    Translation --> WebResponse
+    Translation --> WhatsAppResponse
+    Translation --> SMSResponse
+    VoiceGeneration --> VoiceResponse
+    
+    %% Styling
+    classDef input fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
+    classDef processing fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    classDef core fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+    classDef response fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    classDef output fill:#e0f2f1,stroke:#009688,stroke-width:2px
+    
+    class WebText,WhatsApp,SMS,Voice input
+    class TextProcessor,VoiceProcessor,ImageProcessor,LanguageDetect processing
+    class SupervisorAgent,SpecialistAgents,MCPTools core
+    class ResponseSynthesis,SafetyFilter,Translation,VoiceGeneration response
+    class WebResponse,WhatsAppResponse,SMSResponse,VoiceResponse output
+            </div>
+        </div>
+
+        <!-- Data Flow & Storage -->
+        <div class="diagram-section">
+            <h2 class="diagram-title">5. Data Flow & Storage Architecture</h2>
+            <div class="diagram-description">
+                <strong>Purpose:</strong> Illustrates how data flows through the system, including conversation history, user profiles, external data integration, and caching strategies for optimal performance.
+            </div>
+            <div class="mermaid">
+graph TB
+    subgraph UserData["👤 User Data Layer"]
+        UserProfiles[(👤 User Profiles<br/>DynamoDB<br/>Farm Details, Preferences)]
+        ConversationHistory[(💬 Conversation History<br/>DynamoDB<br/>Session Management)]
+        UserUploads[🖼️ User Uploads<br/>S3 Bucket<br/>Crop Images]
+    end
+    
+    subgraph KnowledgeBase["📚 Knowledge Base Layer"]
+        PlantVillage[(🌿 PlantVillage Dataset<br/>S3 + OpenSearch<br/>50K+ Disease Images)]
+        GovernmentSchemes[(📋 Government Schemes<br/>Bedrock Knowledge Base<br/>RAG + Vector Search)]
+        WeatherData[(🌤️ Weather Data<br/>S3 Bucket<br/>Historical & Real-time)]
+        MarketData[(📊 Market Data<br/>Cache + S3<br/>Price Trends)]
+    end
+    
+    subgraph ExternalSources["🌍 External Data Sources"]
+        Agmarknet[🏪 Agmarknet API<br/>Market Prices]
+        WeatherAPI[🌤️ Weather APIs<br/>IMD, OpenWeather]
+        GovDataPortal[🏛️ data.gov.in<br/>Government Schemes]
+    end
+    
+    subgraph ProcessingLayer["⚡ Processing Layer"]
+        Lambda[🔄 Lambda Functions<br/>Request Processing]
+        AIAgents[🤖 AI Agents<br/>Claude 3.5 Sonnet]
+        MCPLayer[🔌 MCP Layer<br/>External Integration]
+    end
+    
+    subgraph CacheLayer["💾 Caching Layer"]
+        ResponseCache[⚡ Response Cache<br/>Frequent Queries]
+        DataCache[📊 Data Cache<br/>External API Results]
+        SessionCache[🔄 Session Cache<br/>Active Conversations]
+    end
+    
+    %% User Data Flow
+    Lambda <--> UserProfiles
+    Lambda <--> ConversationHistory
+    Lambda <--> UserUploads
+    
+    %% Knowledge Base Access
+    AIAgents <--> PlantVillage
+    AIAgents <--> GovernmentSchemes
+    AIAgents <--> WeatherData
+    AIAgents <--> MarketData
+    
+    %% External Data Integration via MCP
+    MCPLayer <--> Agmarknet
+    MCPLayer <--> WeatherAPI
+    MCPLayer <--> GovDataPortal
+    
+    %% Processing Flow
+    Lambda --> AIAgents
+    AIAgents --> MCPLayer
+    
+    %% Caching Strategy
+    MCPLayer --> DataCache
+    AIAgents --> ResponseCache
+    Lambda --> SessionCache
+    
+    %% Cache to Knowledge Base
+    DataCache --> MarketData
+    DataCache --> WeatherData
+    
+    %% Styling
+    classDef userData fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
+    classDef knowledge fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    classDef external fill:#f1f8e9,stroke:#689f38,stroke-width:2px
+    classDef processing fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+    classDef cache fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    
+    class UserProfiles,ConversationHistory,UserUploads userData
+    class PlantVillage,GovernmentSchemes,WeatherData,MarketData knowledge
+    class Agmarknet,WeatherAPI,GovDataPortal external
+    class Lambda,AIAgents,MCPLayer processing
+    class ResponseCache,DataCache,SessionCache cache
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <h4>🎨 Diagram Legend</h4>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #e8f5e8;"></span>
+                User Interface & Input
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #e3f2fd;"></span>
+                Core Processing
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #f3e5f5;"></span>
+                AI Agents
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #e8eaf6;"></span>
+                MCP Integration
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #fff8e1;"></span>
+                AWS AI Services
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #e1f5fe;"></span>
+                Data Storage
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #f1f8e9;"></span>
+                External APIs
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #fff3e0;"></span>
+                Edge & API Layer
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            sequence: {
+                diagramMarginX: 50,
+                diagramMarginY: 10,
+                actorMargin: 50,
+                width: 150,
+                height: 65,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 35,
+                mirrorActors: true,
+                bottomMarginAdj: 1,
+                useMaxWidth: true,
+                rightAngles: false,
+                showSequenceNumbers: false
+            },
+            gantt: {
+                titleTopMargin: 25,
+                barHeight: 20,
+                fontFamily: '"Open-Sans", "sans-serif"',
+                fontSize: 11,
+                fontWeight: 'normal',
+                gridLineStartPadding: 35,
+                bottomPadding: 5,
+                bottomMarginAdj: 1
+            }
+        });
+    </script>
+</body>
+</html>
