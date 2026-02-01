@@ -28,6 +28,12 @@ The architecture uses a supervisor-worker pattern where the Strands Supervisor A
 - **data.gov.in**: Open Government Data Portal source for scheme information (PM-Kisan, PKVY, etc.)
 - **AgriFieldNet**: Geospatial crop data from Radiant Earth for Bihar, Odisha, Rajasthan, UP
 - **IMD Agro-Met Data**: Indian Meteorological Department historical rainfall and temperature patterns
+- **Model Context Protocol (MCP)**: Standardized protocol for AI agents to access external tools and services
+- **MCP Client**: Central hub managing tool requests from agents and responses from external services
+- **MCP Server**: Service providing standardized access to external APIs (Agmarknet, Weather, Government APIs)
+- **MCP Tool Registry**: Centralized registry storing metadata about available MCP tools (parameters, permissions, timeouts)
+- **Tool Permissions**: Access control mechanism ensuring agents can only use authorized MCP tools
+- **Circuit Breaker Pattern**: Failure handling mechanism that temporarily disables failing MCP tools and falls back to alternatives
 
 ---
 
@@ -391,7 +397,91 @@ _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6_
 
 ---
 
-## System Prompts and Agent Personalities
+### Requirement 13: Model Context Protocol (MCP) Integration
+
+**User Story:** As a system architect, I want to standardize external service access through MCP, so that agents can reliably access market prices, weather data, and government APIs without tight coupling.
+
+#### Acceptance Criteria
+
+1. WHEN the system initializes, THE MCP Client SHALL be configured with access to three MCP Servers: Agmarknet, Weather, and Government API
+2. WHEN an agent requests market price data, THE MCP Client SHALL route the request to the Agmarknet MCP Server using standardized tool calling
+3. WHEN an MCP tool is invoked, THE System SHALL verify the requesting agent has permission to use that tool before execution
+4. WHEN an MCP tool call fails, THE System SHALL retry up to 3 times with exponential backoff before returning an error
+5. WHEN an MCP tool is invoked, THE System SHALL log the tool call, parameters, response, execution time, and success status to CloudWatch
+6. WHEN an MCP server becomes unavailable, THE System SHALL gracefully fall back to cached data or alternative data sources
+7. WHEN an MCP tool call involves farmer data, THE System SHALL ensure no PII is transmitted to external services without proper anonymization
+
+**Available MCP Tools**:
+- `get_mandi_prices`: Fetch current market prices for crops by location
+- `get_price_trends`: Retrieve historical price data for trend analysis
+- `get_nearby_mandis`: Discover nearby market locations
+- `get_crop_availability`: Check crop availability in specific regions
+- `get_current_weather`: Retrieve real-time weather conditions
+- `get_weather_forecast`: Get weather forecasts for planning
+- `get_rainfall_data`: Access rainfall patterns and predictions
+- `get_soil_conditions`: Retrieve soil moisture and nutrient data
+- `search_schemes`: Query government schemes database
+- `check_eligibility`: Validate farmer eligibility for schemes
+- `get_subsidy_info`: Retrieve subsidy amounts and details
+- `get_application_status`: Check application status for schemes
+
+_Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7_
+
+---
+
+### Requirement 14: MCP Tool Registry and Discovery
+
+**User Story:** As a system administrator, I want a centralized registry of all MCP tools, so that agents can discover available tools and understand their parameters and permissions.
+
+#### Acceptance Criteria
+
+1. WHEN the system initializes, THE MCP Tool Registry SHALL be populated with metadata for all available MCP tools
+2. WHEN an agent queries for available tools, THE System SHALL return tool metadata including parameters, permissions, timeouts, and retry policies
+3. WHEN a new MCP tool is added, THE System SHALL register it in the Tool Registry with complete metadata
+4. WHEN tool metadata is updated, THE System SHALL propagate changes to all agents without requiring system restart
+5. WHEN an agent attempts to use a tool, THE System SHALL validate the tool exists in the registry before execution
+6. WHEN tool metadata includes permission requirements, THE System SHALL enforce access control based on agent roles
+
+**Tool Registry Metadata Structure**:
+- tool_id: Unique identifier for the tool
+- server_name: Name of the MCP server providing the tool
+- description: Human-readable description of tool functionality
+- parameters_schema: JSON schema defining required and optional parameters
+- permissions: List of agent roles authorized to use the tool
+- timeout_ms: Maximum execution time before timeout
+- retry_count: Number of retry attempts on failure
+- circuit_breaker: Configuration for failure threshold and recovery timeout
+
+_Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6_
+
+---
+
+### Requirement 15: MCP Error Handling and Resilience
+
+**User Story:** As a system architect, I want robust error handling for MCP tool failures, so that the system gracefully degrades when external services are unavailable.
+
+#### Acceptance Criteria
+
+1. WHEN an MCP server fails to respond within timeout, THE System SHALL log the incident and attempt reconnection
+2. WHEN an MCP tool is not found, THE System SHALL return a user-friendly error message and suggest alternative data sources
+3. WHEN an MCP server authentication fails, THE System SHALL retry with token refresh and fall back to cached data
+4. WHEN an agent lacks permission for an MCP tool, THE System SHALL block the request and log a security incident
+5. WHEN an MCP tool failure rate exceeds threshold, THE System SHALL activate circuit breaker and temporarily disable the tool
+6. WHEN circuit breaker is active, THE System SHALL automatically retry after recovery timeout
+7. WHEN MCP fallback is triggered, THE System SHALL provide cached data with timestamp disclaimer to the user
+
+**Error Handling Strategies**:
+- MCP Server Unavailable: Fall back to cached data from last 24 hours
+- Tool Not Found: Suggest alternative tools or manual data entry
+- Authentication Failure: Retry with token refresh, then use cached data
+- Permission Denied: Block request and log security incident
+- Circuit Breaker Triggered: Use alternative data sources or cached results
+
+_Requirements: 15.1, 15.2, 15.3, 15.4, 15.5, 15.6, 15.7_
+
+---
+
+
 
 ### Gram-Setu Identity (Supervisor Agent)
 
@@ -572,6 +662,130 @@ A farmer asks "What should I plant given water shortage and current government s
 2. **Explainability**: Agents show their reasoning (e.g., "Based on 35°C temperature and 10% humidity, I calculated high evaporation rate...")
 3. **Scalability**: Serverless architecture (Lambda, Bedrock, S3) scales from 10 to 10,000 users without infrastructure changes
 4. **Sovereignty**: Can migrate to sovereign LLMs (like BharatGen) to ensure data privacy and cultural nuance
+
+---
+
+## Correctness Properties
+
+A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.
+
+### Core System Properties
+
+**Property 1: Message Routing Consistency**
+For any user message from any supported interface (web, WhatsApp, voice), the message SHALL be received by Lambda and routed to the Supervisor Agent without loss or corruption.
+Validates: Requirements 1.1, 1.4
+
+**Property 2: Image Storage and Retrieval**
+For any image uploaded by a farmer, the image SHALL be stored in S3 (knowledge-base-bharat) with correct metadata and be retrievable via the stored URL.
+Validates: Requirements 1.2, 4.1
+
+**Property 3: Voice-to-Text Conversion**
+For any voice message from a user, the system SHALL convert it to text using Amazon Transcribe and route the text to the Supervisor Agent.
+Validates: Requirements 1.3
+
+**Property 4: Conversation History Persistence**
+For any user message, the system SHALL store it in DynamoDB with user ID, timestamp, and content, and retrieve it in subsequent sessions.
+Validates: Requirements 3.1, 3.2, 3.3, 3.4
+
+**Property 5: Agent Routing Correctness**
+For any user query, the Supervisor Agent SHALL route to the correct specialist agent(s) based on query domain (Agricultural/Policy/Resource).
+Validates: Requirements 2.1, 2.2, 2.3, 2.4
+
+**Property 6: Multi-Agent Coordination**
+For any query requiring multiple agents, the Supervisor Agent SHALL invoke all relevant agents in parallel and synthesize their responses into a coherent answer.
+Validates: Requirements 2.5, 11.1, 11.2, 11.3
+
+**Property 7: Disease Identification Accuracy**
+For any crop leaf image from the PlantVillage dataset, the Agri-Expert Agent SHALL identify the disease with accuracy ≥ 80% when compared to ground truth labels.
+Validates: Requirements 4.2, 4.3
+
+**Property 8: Treatment Recommendation Completeness**
+For any identified disease, the Agri-Expert Agent SHALL provide treatment recommendations including at least one organic option and one chemical option.
+Validates: Requirements 4.4
+
+**Property 9: Market Price Accuracy**
+For any crop price query, the system SHALL retrieve prices from Agmarknet that match the farmer's region and crop type.
+Validates: Requirements 5.1, 5.2, 5.3
+
+**Property 10: Scheme Matching Correctness**
+For any farmer situation, the Policy-Navigator Agent SHALL match them with all applicable government schemes from the Knowledge Base.
+Validates: Requirements 6.1, 6.3, 6.4
+
+**Property 11: Scheme Information Completeness**
+For any government scheme retrieved, the system SHALL include eligibility criteria, subsidy amounts, and application deadlines.
+Validates: Requirements 6.2, 6.6
+
+**Property 12: Irrigation Recommendation Validity**
+For any weather and soil data provided, the Resource-Optimizer Agent SHALL generate irrigation recommendations based on soil moisture, rainfall forecast, and electricity availability.
+Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.5
+
+**Property 13: Knowledge Base Indexing**
+For any dataset (Agmarknet, government schemes, PlantVillage), the system SHALL index it in the Bedrock Knowledge Base and make it searchable via RAG queries.
+Validates: Requirements 8.1, 8.2, 8.3, 8.4
+
+**Property 14: Guardrail Safety Filtering**
+For any agent response, the system SHALL apply Bedrock Guardrails and block responses containing harmful advice, off-topic content, or medical/legal guidance.
+Validates: Requirements 9.1, 9.2, 9.3, 9.4
+
+**Property 15: Response Grounding**
+For any system response, it SHALL cite official data sources (Agmarknet, data.gov.in, IMD) and not contain hallucinated information.
+Validates: Requirements 9.6
+
+**Property 16: Scalability Under Load**
+For any concurrent user load up to 1000 simultaneous requests, the system SHALL maintain response times under 5 seconds and process all requests without dropping.
+Validates: Requirements 10.1, 10.2, 10.4, 10.5, 10.6
+
+**Property 17: Data Encryption**
+For any user data stored in DynamoDB or transmitted between components, it SHALL be encrypted using AWS KMS (at rest) and HTTPS/TLS (in transit).
+Validates: Requirements 12.1, 12.2
+
+**Property 18: Data Deletion Compliance**
+For any user requesting data deletion, the system SHALL remove all their conversation history and personal information from DynamoDB within 24 hours.
+Validates: Requirements 12.3
+
+**Property 19: Audit Trail Completeness**
+For any agent decision or system action, it SHALL be logged to CloudWatch with timestamp, user ID, action, and outcome for compliance.
+Validates: Requirements 12.4, 12.5
+
+**Property 20: PII Masking**
+For any sensitive information (Aadhaar, bank account, phone) detected in logs or monitoring systems, it SHALL be automatically masked or redacted.
+Validates: Requirements 12.5
+
+### MCP Integration Properties
+
+**Property 21: MCP Tool Registration**
+For any MCP tool added to the system, it SHALL be registered in the Tool Registry with complete metadata (parameters, permissions, timeouts) and be discoverable by authorized agents.
+Validates: Requirements 13.1, 14.1, 14.2
+
+**Property 22: MCP Tool Access Control**
+For any MCP tool request from an agent, the MCP Client SHALL verify the agent has permission to use that tool before executing the request.
+Validates: Requirements 13.3, 14.6
+
+**Property 23: MCP Tool Retry Logic**
+For any MCP tool call that fails, the system SHALL retry up to 3 times with exponential backoff before returning an error to the requesting agent.
+Validates: Requirements 13.4, 15.1
+
+**Property 24: MCP Tool Logging**
+For any MCP tool invocation, the system SHALL log the tool call, parameters, response, execution time, and success status for audit and debugging purposes.
+Validates: Requirements 13.5, 15.1
+
+**Property 25: MCP Fallback Handling**
+For any MCP server that becomes unavailable, the system SHALL gracefully handle the failure and provide cached data or alternative data sources when possible.
+Validates: Requirements 13.6, 15.1, 15.7
+
+**Property 26: MCP Data Privacy**
+For any MCP tool call involving farmer data, the system SHALL ensure no PII is transmitted to external services without explicit consent and proper anonymization.
+Validates: Requirements 13.7, 15.3
+
+**Property 27: MCP Tool Discovery**
+For any agent querying available tools, the system SHALL return complete tool metadata including parameters, permissions, and timeout configurations from the Tool Registry.
+Validates: Requirements 14.2, 14.3
+
+**Property 28: MCP Circuit Breaker**
+For any MCP tool with failure rate exceeding configured threshold, the system SHALL activate circuit breaker, temporarily disable the tool, and automatically retry after recovery timeout.
+Validates: Requirements 15.5, 15.6
+
+---
 
 ## Responsible AI and Governance
 
