@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified Rural Ecosystem (URE) - Farmer Assistant</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .header {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #34495e;
+            color: #ecf0f1;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        .sidebar-item:hover, .sidebar-item.active {
+            background-color: #1abc9c;
+        }
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+        .chat-area {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 20px;
+            overflow-y: scroll;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.5;
+        }
+        .message.user {
+            align-self: flex-end;
+            background-color: #3498db;
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+        .message.bot {
+            align-self: flex-start;
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            border-bottom-left-radius: 2px;
+        }
+        .agent-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #fafafa;
+        }
+        .agent-title {
+            font-weight: bold;
+            color: #27ae60;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        .agent-content {
+            font-size: 0.95rem;
+        }
+        .input-area {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .input-area input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .btn {
+            padding: 12px 24px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background-color: #2ecc71;
+        }
+        .upload-btn {
+            background-color: #95a5a6;
+        }
+        .upload-btn:hover {
+            background-color: #7f8c8d;
+        }
+        .status-bar {
+            padding: 10px;
+            background-color: #f1c40f;
+            color: #34495e;
+            text-align: center;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            display: none; /* Hidden by default */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>URE: Unified Rural Ecosystem</h1>
+        <div>
+            <span>Language: <strong>English</strong></span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-item active">New Chat</div>
+            <div class="sidebar-item">History: Wheat Disease</div>
+            <div class="sidebar-item">History: PM-Kisan Status</div>
+            <div class="sidebar-item">Settings</div>
+        </div>
+
+        <div class="main-content">
+            <div class="status-bar" id="processingStatus">
+                Strands Supervisor is routing your request...
+            </div>
+
+            <div class="chat-area">
+                <!-- Welcome Message -->
+                <div class="message bot">
+                    Namaste! I am your Unified Rural Ecosystem assistant. You can send me a photo of your crop, ask about government schemes, or get irrigation advice. How can I help you today?
+                </div>
+
+                <!-- Example User Interaction (Static for Wireframe) -->
+                <div class="message user">
+                    <p>I found these yellow spots on my wheat leaves. What should I do?</p>
+                    <div style="margin-top:5px; font-size:0.8rem; color:#eee;">[Image Uploaded: wheat_leaf.jpg]</div>
+                </div>
+
+                <!-- Bot Response with Agent Breakdown -->
+                <div class="message bot">
+                    <p>I've analyzed your request. Here is what our experts found:</p>
+
+                    <!-- Agri-Expert Agent Output -->
+                    <div class="agent-card">
+                        <div class="agent-title">🌿 Agri-Expert Agent (Vision Analysis)</div>
+                        <div class="agent-content">
+                            <strong>Diagnosis:</strong> Yellow Rust (Puccinia striiformis).<br>
+                            <strong>Action:</strong> Spray Propiconazole 25 EC @ 1ml/liter of water.<br>
+                            <strong>Market:</strong> Current wheat price in your local Mandi is ₹2,125/quintal.
+                        </div>
+                    </div>
+
+                    <!-- Policy-Navigator Agent Output -->
+                    <div class="agent-card">
+                        <div class="agent-title">📜 Policy-Navigator Agent (Scheme Check)</div>
+                        <div class="agent-content">
+                            <strong>Subsidy Alert:</strong> You are eligible for a 50% subsidy on fungicides under the <em>National Food Security Mission (NFSM)</em>. Visit your local block office with your Aadhaar card.
+                        </div>
+                    </div>
+
+                    <p style="margin-top:10px;">Would you like me to help you apply for the subsidy?</p>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <button class="btn upload-btn" title="Upload Image">📷</button>
+                <button class="btn upload-btn" title="Voice Input">🎤</button>
+                <input type="text" placeholder="Type your query here..." value="">
+                <button class="btn">Send</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
